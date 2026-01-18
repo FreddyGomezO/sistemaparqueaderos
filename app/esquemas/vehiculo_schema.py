@@ -41,7 +41,7 @@ class VehiculoResponse(BaseModel):
     class Config:
         from_attributes = True
 
-class VehiculoConEstimacion(BaseModel):  # ✅ Cambiado: NO hereda de VehiculoResponse
+class VehiculoConEstimacion(BaseModel):
     """Schema para vehículo con costo estimado"""
     id: int
     placa: str
@@ -65,3 +65,7 @@ class EspacioResponse(BaseModel):
     ocupado: bool
     placa: Optional[str] = None
     entrada: Optional[str] = None
+    es_nocturno: Optional[bool] = False  # ✅ ¡¡¡ESTO ES LO QUE FALTA!!!
+
+    class Config:
+        from_attributes = True

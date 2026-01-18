@@ -18,16 +18,24 @@ class VehiculoService:
             Lista de diccionarios con el estado de cada espacio
         """
         vehiculos_activos = db.query(VehiculoEstacionado).filter_by(estado='activo').all()
-        
         espacios = []
         for i in range(1, 16):
             vehiculo = next((v for v in vehiculos_activos if v.espacio_numero == i), None)
-            espacios.append({
+            
+            # 🐛 DEBUG de cada espacio
+            espacio_debug = {
                 'numero': i,
                 'ocupado': vehiculo is not None,
                 'placa': vehiculo.placa if vehiculo else None,
-                'entrada': vehiculo.fecha_hora_entrada.isoformat() if vehiculo else None
-            })
+                'entrada': vehiculo.fecha_hora_entrada.isoformat() if vehiculo else None,
+                'es_nocturno': vehiculo.es_nocturno if vehiculo else False  # ✅ IMPORTANTE
+            }
+            
+            print(f"  Espacio {i}: ocupado={espacio_debug['ocupado']}, " +
+                  f"placa={espacio_debug['placa']}, " +
+                  f"es_nocturno={espacio_debug['es_nocturno']}")
+            
+            espacios.append(espacio_debug)
         
         return espacios
     
@@ -162,18 +170,6 @@ class VehiculoService:
         if not vehiculo:
             raise ValueError('Vehículo no encontrado')
         
-        # ==============================================
-        # 🔍 DEBUG: Ver información del vehículo
-        # ==============================================
-        print("\n" + "="*60)
-        print("🔍 DEBUG VehiculoService.buscar_vehiculo")
-        print(f"Placa: {placa}")
-        print(f"Vehículo ID: {vehiculo.id}")
-        print(f"es_nocturno en DB: {vehiculo.es_nocturno}")
-        print(f"Tipo es_nocturno: {type(vehiculo.es_nocturno)}")
-        print(f"Fecha entrada: {vehiculo.fecha_hora_entrada}")
-        print(f"Tipo fecha entrada: {type(vehiculo.fecha_hora_entrada)}")
-        
         # Calcular costo estimado
         config = ConfiguracionService.obtener_configuracion(db)
         print(f"Configuración precio_nocturno: {config.precio_nocturno}")
@@ -186,12 +182,6 @@ class VehiculoService:
             vehiculo.es_nocturno  # ✅ ¡AQUÍ ESTÁ EL CAMBIO!
         )
         
-        print(f"\n📊 Resultado del cálculo para búsqueda:")
-        print(f"  Costo estimado: {calculo['costo']}")
-        print(f"  Minutos: {calculo['minutos']}")
-        print(f"  Detalles: {calculo['detalles']}")
-        print(f"  ¿Es nocturno?: {vehiculo.es_nocturno}")
-        print("="*60 + "\n")
         
         return {
             'vehiculo': vehiculo,
