@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from app.modelos.configuracion_precios import ConfiguracionPrecios
 from datetime import datetime
+import traceback  # <-- Añade esto
 
 class ConfiguracionService:
     """Servicio para manejar la configuración de precios"""
@@ -26,6 +27,34 @@ class ConfiguracionService:
     @staticmethod
     def actualizar_configuracion(db: Session, datos: dict):
         """Actualizar la configuración de precios"""
+        # ==============================================
+        # 🔍 DEBUG: Ver qué llega EXACTAMENTE
+        # ==============================================
+        print("\n" + "="*60)
+        print("🔍 DEBUG BACKEND - ConfiguracionService.actualizar_configuracion")
+        print("Datos recibidos:", datos)
+        
+        if 'hora_fin_nocturno' in datos:
+            hora_fin = datos['hora_fin_nocturno']
+            print(f"\n🔍 hora_fin_nocturno detallado:")
+            print(f"  Valor: '{hora_fin}'")
+            print(f"  Tipo: {type(hora_fin)}")
+            print(f"  Longitud: {len(hora_fin) if hora_fin else 0}")
+            if hora_fin:
+                print(f"  Caracteres:", [f"{i}:'{c}'({ord(c)})" for i, c in enumerate(hora_fin)])
+                print(f"  Partes al dividir ':': {hora_fin.split(':')}")
+                
+                # Intentar parsear para ver si hay error
+                try:
+                    hora_parsed = datetime.strptime(hora_fin, '%H:%M').time()
+                    print(f"  ✅ Parseado correctamente: {hora_parsed}")
+                except ValueError as e:
+                    print(f"  ❌ Error al parsear: {e}")
+                    print(f"  Traceback:", traceback.format_exc())
+        
+        print("="*60 + "\n")
+        
+        # Continuar con el código original
         config = ConfiguracionService.obtener_configuracion(db)
         
         if 'precio_media_hora' in datos and datos['precio_media_hora'] is not None:
@@ -38,10 +67,21 @@ class ConfiguracionService:
             config.precio_nocturno = datos['precio_nocturno']
         
         if 'hora_inicio_nocturno' in datos and datos['hora_inicio_nocturno'] is not None:
-            config.hora_inicio_nocturno = datetime.strptime(datos['hora_inicio_nocturno'], '%H:%M').time()
+            try:
+                config.hora_inicio_nocturno = datetime.strptime(datos['hora_inicio_nocturno'], '%H:%M').time()
+                print(f"✅ hora_inicio_nocturno parseado: {config.hora_inicio_nocturno}")
+            except ValueError as e:
+                print(f"❌ Error parseando hora_inicio_nocturno: {e}")
+                raise
         
         if 'hora_fin_nocturno' in datos and datos['hora_fin_nocturno'] is not None:
-            config.hora_fin_nocturno = datetime.strptime(datos['hora_fin_nocturno'], '%H:%M').time()
+            try:
+                config.hora_fin_nocturno = datetime.strptime(datos['hora_fin_nocturno'], '%H:%M').time()
+                print(f"✅ hora_fin_nocturno parseado: {config.hora_fin_nocturno}")
+            except ValueError as e:
+                print(f"❌ Error parseando hora_fin_nocturno: {e}")
+                print(f"  Valor que causó error: '{datos['hora_fin_nocturno']}'")
+                raise
         
         db.commit()
         db.refresh(config)

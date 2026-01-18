@@ -12,9 +12,12 @@ class VehiculoBase(BaseModel):
         """Convertir placa a mayúsculas y eliminar espacios"""
         return v.upper().strip()
 
+
 class VehiculoEntrada(VehiculoBase):
     """Schema para registrar entrada de un vehículo"""
     espacio_numero: int = Field(..., ge=1, le=15, description="Número de espacio (1-15)")
+    # NUEVO CAMPO: indica si es entrada nocturna
+    es_nocturno: bool = Field(False, description="Indica si el vehículo pagará tarifa nocturna")
 
 class VehiculoSalida(BaseModel):
     """Schema para registrar salida de un vehículo"""

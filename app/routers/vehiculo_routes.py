@@ -36,13 +36,18 @@ def registrar_entrada(datos: VehiculoEntrada, db: Session = Depends(get_db)):
     Registrar la entrada de un vehículo
     
     Args:
-        datos: Placa y número de espacio
+        datos: Placa, número de espacio y si es nocturno
     
     Returns:
         Información del vehículo registrado
     """
     try:
-        vehiculo = VehiculoService.registrar_entrada(db, datos.placa, datos.espacio_numero)
+        vehiculo = VehiculoService.registrar_entrada(
+            db, 
+            datos.placa, 
+            datos.espacio_numero,
+            datos.es_nocturno  # NUEVO
+        )
         return vehiculo.to_dict()
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

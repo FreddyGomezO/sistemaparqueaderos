@@ -32,7 +32,7 @@ class VehiculoService:
         return espacios
     
     @staticmethod
-    def registrar_entrada(db: Session, placa: str, espacio_numero: int):
+    def registrar_entrada(db: Session, placa: str, espacio_numero: int, es_nocturno: bool = False):
         """
         Registrar la entrada de un vehículo
         
@@ -40,12 +40,7 @@ class VehiculoService:
             db: Sesión de base de datos
             placa: Placa del vehículo
             espacio_numero: Número del espacio (1-15)
-        
-        Returns:
-            VehiculoEstacionado registrado
-        
-        Raises:
-            ValueError: Si el espacio está ocupado o la placa ya está registrada
+            es_nocturno: Si el vehículo pagará tarifa nocturna
         """
         placa = placa.upper().strip()
         
@@ -71,12 +66,13 @@ class VehiculoService:
         if vehiculo_activo:
             raise ValueError(f'El vehículo {placa} ya está estacionado en el espacio {vehiculo_activo.espacio_numero}')
         
-        # Crear nuevo registro
+        # Crear nuevo registro CON EL CAMPO es_nocturno
         vehiculo = VehiculoEstacionado(
             placa=placa,
             espacio_numero=espacio_numero,
             fecha_hora_entrada=datetime.now(),
-            estado='activo'
+            estado='activo',
+            es_nocturno=es_nocturno  # NUEVO
         )
         
         db.add(vehiculo)
@@ -89,16 +85,6 @@ class VehiculoService:
     def registrar_salida(db: Session, placa: str):
         """
         Registrar la salida de un vehículo y calcular el costo
-        
-        Args:
-            db: Sesión de base de datos
-            placa: Placa del vehículo
-        
-        Returns:
-            Diccionario con vehiculo, factura y tiempo formateado
-        
-        Raises:
-            ValueError: Si el vehículo no está encontrado
         """
         placa = placa.upper().strip()
         
@@ -114,12 +100,13 @@ class VehiculoService:
         # Obtener configuración
         config = ConfiguracionService.obtener_configuracion(db)
         
-        # Calcular costo
+        # Calcular costo (pasar es_nocturno)
         fecha_salida = datetime.now()
         calculo = CalculoService.calcular_costo(
             vehiculo.fecha_hora_entrada,
             fecha_salida,
-            config
+            config,
+            vehiculo.es_nocturno  # NUEVO: pasar si es nocturno
         )
         
         # Actualizar vehículo
@@ -175,13 +162,36 @@ class VehiculoService:
         if not vehiculo:
             raise ValueError('Vehículo no encontrado')
         
+        # ==============================================
+        # 🔍 DEBUG: Ver información del vehículo
+        # ==============================================
+        print("\n" + "="*60)
+        print("🔍 DEBUG VehiculoService.buscar_vehiculo")
+        print(f"Placa: {placa}")
+        print(f"Vehículo ID: {vehiculo.id}")
+        print(f"es_nocturno en DB: {vehiculo.es_nocturno}")
+        print(f"Tipo es_nocturno: {type(vehiculo.es_nocturno)}")
+        print(f"Fecha entrada: {vehiculo.fecha_hora_entrada}")
+        print(f"Tipo fecha entrada: {type(vehiculo.fecha_hora_entrada)}")
+        
         # Calcular costo estimado
         config = ConfiguracionService.obtener_configuracion(db)
+        print(f"Configuración precio_nocturno: {config.precio_nocturno}")
+        
+        # 🔍 IMPORTANTE: Pasar es_nocturno al cálculo
         calculo = CalculoService.calcular_costo(
             vehiculo.fecha_hora_entrada,
             datetime.now(),
-            config
+            config,
+            vehiculo.es_nocturno  # ✅ ¡AQUÍ ESTÁ EL CAMBIO!
         )
+        
+        print(f"\n📊 Resultado del cálculo para búsqueda:")
+        print(f"  Costo estimado: {calculo['costo']}")
+        print(f"  Minutos: {calculo['minutos']}")
+        print(f"  Detalles: {calculo['detalles']}")
+        print(f"  ¿Es nocturno?: {vehiculo.es_nocturno}")
+        print("="*60 + "\n")
         
         return {
             'vehiculo': vehiculo,
