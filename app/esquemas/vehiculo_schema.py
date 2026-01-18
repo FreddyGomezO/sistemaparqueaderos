@@ -1,4 +1,3 @@
-
 from pydantic import BaseModel, Field, validator
 from typing import Optional
 from datetime import datetime
@@ -16,7 +15,6 @@ class VehiculoBase(BaseModel):
 class VehiculoEntrada(VehiculoBase):
     """Schema para registrar entrada de un vehículo"""
     espacio_numero: int = Field(..., ge=1, le=15, description="Número de espacio (1-15)")
-    # NUEVO CAMPO: indica si es entrada nocturna
     es_nocturno: bool = Field(False, description="Indica si el vehículo pagará tarifa nocturna")
 
 class VehiculoSalida(BaseModel):
@@ -37,16 +35,29 @@ class VehiculoResponse(BaseModel):
     fecha_hora_salida: Optional[str]
     costo_total: Optional[float]
     estado: str
+    es_nocturno: bool  # ✅ ¡AGREGADO!
     creado_en: str
 
     class Config:
         from_attributes = True
 
-class VehiculoConEstimacion(VehiculoResponse):
+class VehiculoConEstimacion(BaseModel):  # ✅ Cambiado: NO hereda de VehiculoResponse
     """Schema para vehículo con costo estimado"""
+    id: int
+    placa: str
+    espacio_numero: int
+    fecha_hora_entrada: str
+    fecha_hora_salida: Optional[str]
+    costo_total: Optional[float]
+    estado: str
+    es_nocturno: bool  # ✅ ¡AGREGADO!
+    creado_en: str
     costo_estimado: float
     tiempo_estimado: str
     detalles: str
+
+    class Config:
+        from_attributes = True
 
 class EspacioResponse(BaseModel):
     """Schema para respuesta de espacios"""

@@ -58,27 +58,25 @@ def registrar_entrada(datos: VehiculoEntrada, db: Session = Depends(get_db)):
 def registrar_salida(datos: VehiculoSalida, db: Session = Depends(get_db)):
     """
     Registrar la salida de un vehículo y generar factura
-    
-    Args:
-        datos: Placa del vehículo
-    
-    Returns:
-        Factura con el costo total y detalles
     """
     try:
         resultado = VehiculoService.registrar_salida(db, datos.placa)
+        vehiculo = resultado['vehiculo']
+        factura = resultado['factura']
         
         return {
             "success": True,
             "message": "Salida registrada exitosamente",
             "factura": {
-                "placa": resultado['vehiculo'].placa,
-                "espacio": resultado['vehiculo'].espacio_numero,
-                "entrada": resultado['vehiculo'].fecha_hora_entrada.isoformat(),
-                "salida": resultado['vehiculo'].fecha_hora_salida.isoformat(),
+                "placa": vehiculo.placa,
+                "espacio": vehiculo.espacio_numero,
+                "entrada": vehiculo.fecha_hora_entrada.isoformat(),
+                "salida": vehiculo.fecha_hora_salida.isoformat(),
                 "tiempo_total": resultado['tiempo_formateado'],
-                "costo_total": float(resultado['vehiculo'].costo_total),
-                "detalles": resultado['factura'].detalles_cobro
+                "costo_total": float(vehiculo.costo_total),
+                "detalles": factura.detalles_cobro,
+                "es_nocturno": vehiculo.es_nocturno,  # ✅ ¡AGREGADO!
+                "tarifa_aplicada": "NOCTURNA" if vehiculo.es_nocturno else "NORMAL"
             }
         }
     except ValueError as e:
@@ -90,25 +88,30 @@ def registrar_salida(datos: VehiculoSalida, db: Session = Depends(get_db)):
 def buscar_vehiculo(placa: str, db: Session = Depends(get_db)):
     """
     Buscar un vehículo activo y mostrar costo estimado
-    
-    Args:
-        placa: Placa del vehículo a buscar
-    
-    Returns:
-        Información del vehículo con costo estimado actual
     """
     try:
         resultado = VehiculoService.buscar_vehiculo(db, placa)
         
-        return {
+        # Obtener datos completos del vehículo
+        vehiculo = resultado['vehiculo']
+        vehiculo_dict = vehiculo.to_dict()  # Esto incluye es_nocturno
+        
+        # Crear respuesta con el formato correcto
+        respuesta = {
             "success": True,
             "data": {
-                **resultado['vehiculo'].to_dict(),
+                **vehiculo_dict,
                 "costo_estimado": resultado['costo_estimado'],
                 "tiempo_estimado": resultado['tiempo_estimado'],
                 "detalles": resultado['detalles']
             }
         }
+        
+        print(f"🔍 Respuesta del endpoint /buscar/{placa}:")
+        print(f"   ¿Incluye es_nocturno?: {'es_nocturno' in respuesta['data']}")
+        print(f"   Valor es_nocturno: {respuesta['data'].get('es_nocturno')}")
+        
+        return respuesta
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
