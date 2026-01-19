@@ -14,7 +14,7 @@ class VehiculoEstacionado(Base):
     fecha_hora_salida = Column(DateTime, nullable=True)
     costo_total = Column(Numeric(10, 2), nullable=True)
     estado = Column(Enum('activo', 'finalizado', name='estado_vehiculo'), default='activo', index=True)
-    # NUEVO CAMPO
+    # CAMPO NOCTURNO
     es_nocturno = Column(Boolean, default=False, nullable=False, index=True)
     creado_en = Column(DateTime, default=datetime.now)
 
@@ -22,7 +22,8 @@ class VehiculoEstacionado(Base):
     factura = relationship("HistorialFactura", back_populates="vehiculo", uselist=False)
 
     __table_args__ = (
-        CheckConstraint('espacio_numero >= 1 AND espacio_numero <= 15', name='check_espacio_valido'),
+        # ✅ CAMBIO: De 15 a 24
+        CheckConstraint('espacio_numero >= 1 AND espacio_numero <= 24', name='check_espacio_valido'),
     )
 
     def to_dict(self):
@@ -35,6 +36,6 @@ class VehiculoEstacionado(Base):
             'fecha_hora_salida': self.fecha_hora_salida.isoformat() if self.fecha_hora_salida else None,
             'costo_total': float(self.costo_total) if self.costo_total else None,
             'estado': self.estado,
-            'es_nocturno': self.es_nocturno,  # NUEVO
+            'es_nocturno': self.es_nocturno,
             'creado_en': self.creado_en.isoformat() if self.creado_en else None
         }

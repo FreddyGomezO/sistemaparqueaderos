@@ -20,7 +20,7 @@ class VehiculoService:
         """
         vehiculos_activos = db.query(VehiculoEstacionado).filter_by(estado='activo').all()
         espacios = []
-        for i in range(1, 16):
+        for i in range(1, 25):
             vehiculo = next((v for v in vehiculos_activos if v.espacio_numero == i), None)
             
             # 🐛 DEBUG de cada espacio
@@ -48,14 +48,14 @@ class VehiculoService:
         Args:
             db: Sesión de base de datos
             placa: Placa del vehículo
-            espacio_numero: Número del espacio (1-15)
+            espacio_numero: Número del espacio (1-24)
             es_nocturno: Si el vehículo pagará tarifa nocturna
         """
         placa = placa.upper().strip()
         
         # Validar espacio
-        if not (1 <= espacio_numero <= 15):
-            raise ValueError('El número de espacio debe estar entre 1 y 15')
+        if not (1 <= espacio_numero <= 24):
+            raise ValueError('El número de espacio debe estar entre 1 y 24')
         
         # Verificar si el espacio está ocupado
         espacio_ocupado = db.query(VehiculoEstacionado).filter_by(

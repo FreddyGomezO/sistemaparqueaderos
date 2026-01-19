@@ -14,7 +14,8 @@ class VehiculoBase(BaseModel):
 
 class VehiculoEntrada(VehiculoBase):
     """Schema para registrar entrada de un vehículo"""
-    espacio_numero: int = Field(..., ge=1, le=15, description="Número de espacio (1-15)")
+    # ✅ CAMBIO: De le=15 a le=24
+    espacio_numero: int = Field(..., ge=1, le=24, description="Número de espacio (1-24)")
     es_nocturno: bool = Field(False, description="Indica si el vehículo pagará tarifa nocturna")
 
 class VehiculoSalida(BaseModel):
@@ -35,7 +36,7 @@ class VehiculoResponse(BaseModel):
     fecha_hora_salida: Optional[str]
     costo_total: Optional[float]
     estado: str
-    es_nocturno: bool  # ✅ ¡AGREGADO!
+    es_nocturno: bool
     creado_en: str
 
     class Config:
@@ -50,7 +51,7 @@ class VehiculoConEstimacion(BaseModel):
     fecha_hora_salida: Optional[str]
     costo_total: Optional[float]
     estado: str
-    es_nocturno: bool  # ✅ ¡AGREGADO!
+    es_nocturno: bool
     creado_en: str
     costo_estimado: float
     tiempo_estimado: str
@@ -65,7 +66,7 @@ class EspacioResponse(BaseModel):
     ocupado: bool
     placa: Optional[str] = None
     entrada: Optional[str] = None
-    es_nocturno: Optional[bool] = False  # ✅ ¡¡¡ESTO ES LO QUE FALTA!!!
+    es_nocturno: Optional[bool] = False
 
     class Config:
         from_attributes = True
