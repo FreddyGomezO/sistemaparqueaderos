@@ -33,5 +33,7 @@ class HistorialFactura(Base):
             'tiempo_total_minutos': self.tiempo_total_minutos,
             'costo_total': float(self.costo_total),
             'detalles_cobro': self.detalles_cobro,
-            'fecha_generacion': self.fecha_generacion.isoformat()
+            'fecha_generacion': self.fecha_generacion.isoformat(),
+            'es_nocturno': self.vehiculo.es_nocturno if self.vehiculo else False  # ¡¡¡ESTO FALTABA!!!
+
         }

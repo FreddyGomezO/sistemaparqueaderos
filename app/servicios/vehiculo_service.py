@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+from sqlalchemy.orm import joinedload  # ¡¡¡NUEVO IMPORT!!!
 from datetime import datetime
 from app.modelos.vehiculo_estacionado import VehiculoEstacionado
 from app.modelos.historial_factura import HistorialFactura
@@ -203,13 +204,32 @@ class VehiculoService:
         Returns:
             Lista de HistorialFactura
         """
-        query = db.query(HistorialFactura)
+        # ¡¡¡CORRECCIÓN: Usar joinedload para cargar la relación!!!
+        query = db.query(HistorialFactura).options(
+            joinedload(HistorialFactura.vehiculo)  # ¡¡¡ESTO ES LO QUE FALTABA!!!
+        )
         
         if fecha:
-            fecha_obj = datetime.strptime(fecha, '%Y-%m-%d').date()
-            query = query.filter(func.date(HistorialFactura.fecha_generacion) == fecha_obj)
+            try:
+                fecha_obj = datetime.strptime(fecha, '%Y-%m-%d').date()
+                query = query.filter(func.date(HistorialFactura.fecha_generacion) == fecha_obj)
+            except ValueError:
+                raise ValueError("Formato de fecha inválido. Use YYYY-MM-DD")
         
         historial = query.order_by(HistorialFactura.fecha_generacion.desc()).limit(limite).all()
+        
+        # Depuración: Verificar si se cargó la relación
+        if historial:
+            print(f"🔍 Depuración Historial - Primer registro:")
+            print(f"   Factura ID: {historial[0].id}")
+            print(f"   Placa: {historial[0].placa}")
+            print(f"   Vehículo cargado: {historial[0].vehiculo is not None}")
+            if historial[0].vehiculo:
+                print(f"   es_nocturno: {historial[0].vehiculo.es_nocturno}")
+                print(f"   to_dict() incluye es_nocturno?: {'es_nocturno' in historial[0].to_dict()}")
+            else:
+                print(f"   ⚠️ ERROR: Vehículo NO cargado para factura {historial[0].id}")
+        
         return historial
     
     @staticmethod
